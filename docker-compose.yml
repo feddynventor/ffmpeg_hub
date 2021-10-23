@@ -1,0 +1,32 @@
+# docker-compose.yml
+version: '3'
+
+services:
+  # ==== Dynamically created from API server ====
+  # ffmpeg:
+  #   build:
+  #     context: ./ffmpeg-cuda
+  #     dockerfile: Dockerfile.std
+  #   volumes:
+  #    - input:/opt/downloads
+  #    - output:/opt/output
+  
+  # ==== Expose an HTTP endpoint ====
+  api:
+    build:
+      context: ./ffapi
+      dockerfile: Dockerfile
+    entrypoint: node /opt/app/index.js
+    environment:
+     - INPUT_DIR
+     - OUTPUT_DIR
+     - COMPOSE_PROJECT_NAME
+    ports:
+     - "3000:3000"
+    volumes:
+     - input:${INPUT_DIR}
+     - output:${OUTPUT_DIR}
+
+volumes:
+  input:
+  output:
