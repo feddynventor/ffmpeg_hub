@@ -30,7 +30,7 @@ async function createContainer(image, command, cb){
     result += "\n"+chunk.toString('utf8')
   });
 
-  docker.run('feddynventor/'+image, ['bash','-c',command], logStream, {
+  docker.run(image, command.split(" "), logStream, {
     "HostConfig": {
       // "Devices": [
       //   {
@@ -63,9 +63,9 @@ async function createContainer(image, command, cb){
   }).then(function(data) {
     let output = data[0];
     let container = data[1];
-    console.log("EXITED w/code", output.StatusCode);
+    // console.log("EXITED w/code", output.StatusCode);
     cb(true, data, result);
-    return container.remove();
+    // return container.remove();
   }).then(function(data) {
     console.log('Container cleaned');
   }).catch(function(err) {

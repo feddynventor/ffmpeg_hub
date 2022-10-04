@@ -7,7 +7,8 @@ Implements **NVENC Encoder only** and so H264 and H265 Decoder.
 # Setup
 ## Requirements
 ### *> NVIDIA Docker*
-[NVIDIA Docker](https://github.com/NVIDIA/nvidia-docker) is the required **Docker Backend** for sharing CUDA resources with Host System 
+[NVIDIA Docker](https://github.com/NVIDIA/nvidia-docker) is the required **Docker Backend** for sharing CUDA resources with Host System
+`sudo apt install nvidia-docker2` 
 [Base image](https://hub.docker.com/layers/nvidia/cuda/11.4.2-base-ubuntu20.04/images/sha256-e513b09d0dab61c85b32b2702f9b37692a4170270adbd3e2612575d1c7208b3c?context=explore) to verify that GPU is detected inside container
 
 ### Test Procedure

@@ -26,7 +26,16 @@ services:
     volumes:
      - input:${INPUT_DIR}
      - output:${OUTPUT_DIR}
-
+     - ${ASSETS_DIR}:/opt/assets
+  telegram:
+    build:
+      context: ./telegram
+      dockerfile: Dockerfile
+    entrypoint: node /opt/app/index.js
+    environment:
+     - TELEGRAM_BOT
+    volumes:
+     - output:${OUTPUT_DIR}
 volumes:
   input:
   output:
