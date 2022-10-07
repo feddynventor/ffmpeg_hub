@@ -3,7 +3,7 @@ module.exports = {
 }
 
 var Docker = require('dockerode')
-var docker = new Docker({host: '10.0.0.9', port: 2375}); //defaults to http
+var docker = new Docker({host: process.env.HOST_IP, port: 2375}); //defaults to http
 
 var stdStream = require('stream');
 
@@ -44,7 +44,7 @@ async function createContainer(image, command, cb){
       //     "CgroupPermissions": "rwm"
       //   }
       // ],
-      "Runtime": "nvidia",
+      //"Runtime": "nvidia",
       "Mounts": [
         {
           "Target":   process.env.INPUT_DIR,
@@ -65,7 +65,7 @@ async function createContainer(image, command, cb){
     let container = data[1];
     // console.log("EXITED w/code", output.StatusCode);
     cb(true, data, result);
-    // return container.remove();
+    return container.remove();
   }).then(function(data) {
     console.log('Container cleaned');
   }).catch(function(err) {

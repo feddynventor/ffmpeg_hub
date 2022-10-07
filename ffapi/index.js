@@ -23,7 +23,7 @@ app.post("/new", async (req, res) => {
     let input_files = req.body.actions
     .filter((element) => element.action=="download" || element.action=="peek")
     .map((element, index)=> {
-        if (element.action == "download") return process.env.INPUT_DIR+'/'+id+'_input'+index+element.source.substr(element.source.lastIndexOf('.'))
+        if (element.action == "download") return process.env.INPUT_DIR+'/'+id+'_input'+index+element.source.substr(element.source.lastIndexOf('.')).toLowerCase()
         else return element.file
     });
 
@@ -59,8 +59,23 @@ app.post("/new", async (req, res) => {
                         res.writeContinue()
                         docker.createContainer("jrottenberg/ffmpeg",
                         (!!element.video)?
-                        `-y -hide_banner -loglevel warning -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -vcodec libx264`+((req.body.bitrate)?` -b:v ${req.body.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`:
-                        `-y -hide_banner -loglevel warning -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -vcodec libx264`+((req.body.bitrate)?` -b:v ${req.body.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`,
+                        `-y -hide_banner -loglevel warning -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -vcodec libx264`+((element.bitrate)?` -b:v ${element.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`:
+                        `-y -hide_banner -loglevel warning -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -vcodec libx264`+((element.bitrate)?` -b:v ${element.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`,
+                        (ok, info, log)=>{
+                            if (ok && info[0].StatusCode == 0){
+                                resolve(`${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`)
+                            } else {
+                                reject(log)
+                            }
+                        })
+                    })
+                case "scale":
+                    return async () => new Promise((resolve, reject)=>{
+                        res.writeContinue()
+                        docker.createContainer("jrottenberg/ffmpeg",
+                        (!!element.video)?
+                        `-y -hide_banner -loglevel warning -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -vf scale=w=${element.width}:h=${element.heigth} -vcodec libx264`+((element.bitrate)?` -b:v ${element.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`:
+                        `-y -hide_banner -loglevel warning -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -vf scale=w=${element.width}:h=${element.heigth} -vcodec libx264`+((element.bitrate)?` -b:v ${element.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`,
                         (ok, info, log)=>{
                             if (ok && info[0].StatusCode == 0){
                                 resolve(`${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`)
@@ -78,8 +93,8 @@ app.post("/new", async (req, res) => {
                         res.writeContinue()
                         docker.createContainer("jrottenberg/ffmpeg",
                         (!!element.video)?
-                        `-y -hide_banner -loglevel warning -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -i ${process.env.INPUT_DIR}/${id}_input${element.logo-1}.png -filter_complex [1][0]scale2ref[i][m];[m][i]overlay=format=auto,format=yuv420p[v] -map [v] -map 0:a -vcodec libx264`+((req.body.bitrate)?` -b:v ${req.body.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`:
-                        `-y -hide_banner -loglevel warning -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -i ${process.env.INPUT_DIR}/${id}_input${element.logo-1}.png -filter_complex [1][0]scale2ref[i][m];[m][i]overlay=format=auto,format=yuv420p[v] -map [v] -map 0:a -vcodec libx264`+((req.body.bitrate)?` -b:v ${req.body.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`,
+                        `-y -hide_banner -loglevel warning -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -i ${process.env.INPUT_DIR}/${id}_input${element.logo-1}.png -filter_complex [1][0]scale2ref[i][m];[m][i]overlay=format=auto,format=yuv420p[v] -map [v] -map 0:a -vcodec libx264`+((element.bitrate)?` -b:v ${element.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`:
+                        `-y -hide_banner -loglevel warning -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -i ${process.env.INPUT_DIR}/${id}_input${element.logo-1}.png -filter_complex [1][0]scale2ref[i][m];[m][i]overlay=format=auto,format=yuv420p[v] -map [v] -map 0:a -vcodec libx264`+((element.bitrate)?` -b:v ${element.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`,
                         (ok, info, log)=>{
                             if (ok && info[0].StatusCode == 0){
                                 resolve(`${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`)
@@ -93,8 +108,8 @@ app.post("/new", async (req, res) => {
                         res.writeContinue()
                         docker.createContainer("jrottenberg/ffmpeg",
                         (!!element.outputLast)?
-                        `-y -hide_banner -loglevel warning -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -filter_complex [0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a] -map [v] -map [a] -vcodec libx264`+((req.body.bitrate)?` -b:v ${req.body.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`:
-                        `-y -hide_banner -loglevel warning -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -filter_complex [0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a] -map [v] -map [a] -vcodec libx264`+((req.body.bitrate)?` -b:v ${req.body.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`,
+                        `-y -hide_banner -loglevel warning -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -filter_complex [0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a] -map [v] -map [a] -vcodec libx264`+((element.bitrate)?` -b:v ${element.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`:
+                        `-y -hide_banner -loglevel warning -i ${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4 -i ${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4 -filter_complex [0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a] -map [v] -map [a] -vcodec libx264`+((element.bitrate)?` -b:v ${element.bitrate}k`:``)+` ${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`,
                         (ok, info, log)=>{
                             if (ok && info[0].StatusCode == 0){
                                 resolve(`${process.env.OUTPUT_DIR}/${id}_stage${index}.mp4`)
