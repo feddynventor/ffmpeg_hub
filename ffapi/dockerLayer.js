@@ -22,7 +22,7 @@ var stdStream = require('stream');
 //   // console.log(err, stream);
 // });
 
-async function createContainer(image, command, cb){
+async function createContainer(image, ep, command, cb){
   let logStream = new stdStream.PassThrough();
   let result = ""
   logStream.on('data', function(chunk){
@@ -31,6 +31,7 @@ async function createContainer(image, command, cb){
   });
 
   docker.run(image, command.split(" "), logStream, {
+    "Entrypoint": (!ep?'ffmpeg':ep),
     "HostConfig": {
       // "Devices": [
       //   {

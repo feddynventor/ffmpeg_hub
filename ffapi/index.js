@@ -54,6 +54,20 @@ app.post("/new", async (req, res) => {
                         })
                     })
                 case "peek": break;
+		case "probe":
+                    return async () => new Promise((resolve, reject)=>{
+                        res.writeContinue()
+			let filename=!!element.video?`${process.env.INPUT_DIR}/${id}_input${element.video-1}.mp4`:`${process.env.OUTPUT_DIR}/${id}_stage${index-1}.mp4`
+                        docker.createContainer("jrottenberg/ffmpeg", "ffprobe",
+                        '-v quiet -select_streams v:0 -print_format json -show_streams '+filename,
+                        (ok, info, log)=>{
+                            if (ok && info[0].StatusCode == 0){
+                                resolve(filename,JSON.parse(log))
+                            } else {
+                                reject(log)
+                            }
+                        })
+                    })
                 case "compress":
                     return async () => new Promise((resolve, reject)=>{
                         res.writeContinue()
@@ -128,8 +142,8 @@ app.post("/new", async (req, res) => {
     list[id] = {status:null,date:Date.now()};
 
     worker(promises).then(
-        (result)=>{
-            console.log(id,true,result)
+        (result,info)=>{
+            console.log(id,true,result,info)
             list[id] = {status:result,date:Date.now()};
         },
         (msg)=>{

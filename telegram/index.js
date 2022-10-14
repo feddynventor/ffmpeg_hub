@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const token = process.env.TELEGRAM_BOT;
 const bot = new TelegramBot(token, {polling: true});
 
-const authorized = []
+//const authorized = require('./authorized.js').whitelist;
 console.log("ENV VARS:", token, process.env.HOST_IP)
 
 const http = require('request')
@@ -13,6 +13,7 @@ bot.on('message', (msg) => {
     // if (!authorized.includes(msg.from.id)) return
     if ((!msg.video && !msg.document)) return
     if (!!msg.document && !msg.document.mime_type.includes("video")) return
+    if (!!msg.document) console.log(msg)
 
     // https://api.telegram.org/botXXX/getFile?file_id=ZZZ
     // https://api.telegram.org/file/botXXX/videos/file_0.mp4
